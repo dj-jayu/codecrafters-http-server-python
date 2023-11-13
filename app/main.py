@@ -33,12 +33,12 @@ def main():
     first_line = client_data.splitlines()[0]
     path = unquote(first_line.split(" ")[1])
     if path == '/':
-        http_response = "HTTP/1.1 200 OK\r\n"
+        http_response = "HTTP/1.1 200 OK\r\n\r\n"
     elif path.startswith('/echo'):
         content = capture_final_path(unquote(path))
         http_response = generate_content('1.1', '200 OK', 'text/plain', content)
     else:
-        http_response = "HTTP/1.1 404 Not Found\r\n"
+        http_response = "HTTP/1.1 404 Not Found\r\n\r\n"
     print(http_response)
     client_socket.sendall(http_response.encode())
     client_socket.close()
