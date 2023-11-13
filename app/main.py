@@ -15,7 +15,7 @@ def capture_final_path(path):
     # receives an unquoted path and returns what is between <>
     pattern = r'/([^/]+)$'
     match = re.search(pattern, path)
-    return match.group(1)
+    return match.group(1) if match else ''
 
 
 def main():
