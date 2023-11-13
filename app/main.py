@@ -20,6 +20,11 @@ def capture_final_path(path):
     match = re.search(pattern, path)
     return match.group(1) if match else ''
 
+def get_user_agent(client_data):
+    print(client_data)
+    pattern = r'User-Agent: (.*)'
+    match = re.search(pattern, client_data)
+    return match.group(1) if match else ''
 
 def main():
     # You can use print statements as follows for debugging, they'll be visible when running tests.
@@ -37,6 +42,9 @@ def main():
     elif path.startswith('/echo'):
         content = capture_final_path(unquote(path))
         http_response = generate_content('1.1', '200 OK', 'text/plain', content)
+    elif path == '/user-agent':
+        user_agent = get_user_agent(client_data)
+        http_response = generate_content('1.1', '200 OK', 'text/plain', user_agent)
     else:
         http_response = "HTTP/1.1 404 Not Found\r\n\r\n"
     print(http_response)
