@@ -32,17 +32,21 @@ def get_user_agent(client_data):
 
 
 def get_file_name(client_data):
-    pattern = r'GET /files/(.*)'
+    print(f'{client_data=}')
+    pattern = r'GET /files/([^\s]*)'
     match = re.search(pattern, client_data)
     return match.group(1) if match else ''
 
 
 def check_file(file_name, directory):
+    print(f'{directory=}, {file_name=}')
     full_path = os.path.join(directory, file_name)
+    print(f'{file_name=}')
     if os.path.isfile(full_path):
         f = open(full_path, mode='rb')
         file_content = f.read()
         f.close()
+        print(file_content)
         return True, file_content
     return False, None
 
@@ -63,7 +67,7 @@ def process_socket(client_socket, args):
         file_name = get_file_name(client_data)
         file_exists, file_content = check_file(file_name, args.directory)
         if file_exists:
-            http_response = generate_content('1.1', '200 OK', 'application/octet', file_content)
+            http_response = generate_content('1.1', '200 OK', 'application/octet', str(file_content))
         else:
             http_response = "HTTP/1.1 404 Not Found\r\n\r\n"
     else:
