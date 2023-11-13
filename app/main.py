@@ -10,8 +10,8 @@ def generate_content(http_version, status_code, content_type, content):
                         f'Content-Length: {len(content)}']
     response_body = ''
     if len(content) > 0:
-        response_body = '\r\n' + content
-    return '\r\n'.join(response_headers) + '\r\n' + response_body
+        response_body = content
+    return '\r\n'.join(response_headers) + '\r\n\r\n' + response_body
 
 
 def capture_final_path(path):
