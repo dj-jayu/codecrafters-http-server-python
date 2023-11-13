@@ -22,7 +22,7 @@ def main():
     # You can use print statements as follows for debugging, they'll be visible when running tests.
     print("Logs from your program will appear here!")
 
-    server_socket = socket.create_server(("localhost", 4221), reuse_port=False)
+    server_socket = socket.create_server(("localhost", 4221), reuse_port=True)
     server_socket.listen()
     client_socket, address = server_socket.accept()
     client_data = client_socket.recv(1024).decode('utf-8')
@@ -30,6 +30,7 @@ def main():
     path = first_line.split(" ")[1]
     content = capture_final_path(unquote(path))
     http_response = generate_content('1.1', '200 OK', 'text/plain', content)
+    print(http_response)
     client_socket.sendall(http_response.encode())
     client_socket.close()
 
