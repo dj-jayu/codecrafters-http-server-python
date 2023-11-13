@@ -16,7 +16,7 @@ def generate_content(http_version, status_code, content_type, content):
 
 def capture_final_path(path):
     # receives an unquoted path and returns what is between <>
-    pattern = r'/([^/]+)$'
+    pattern = r'/echo/(.+)$'
     match = re.search(pattern, path)
     return match.group(1) if match else ''
 
@@ -31,9 +31,14 @@ def main():
     client_socket, address = server_socket.accept()
     client_data = client_socket.recv(1024).decode('utf-8')
     first_line = client_data.splitlines()[0]
-    path = first_line.split(" ")[1]
-    content = capture_final_path(unquote(path))
-    http_response = generate_content('1.1', '200 OK', 'text/plain', content)
+    path = unquote(first_line.split(" ")[1])
+    if path == '/':
+        http_response = "HTTP/1.1 200 OK"
+    elif path.startswith('/echo'):
+        content = capture_final_path(unquote(path))
+        http_response = generate_content('1.1', '200 OK', 'text/plain', content)
+    else:
+        http_response = "HTTP/1.1 404 Not Found"
     print(http_response)
     client_socket.sendall(http_response.encode())
     client_socket.close()
