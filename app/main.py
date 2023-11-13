@@ -7,8 +7,11 @@ from urllib.parse import unquote
 def generate_content(http_version, status_code, content_type, content):
     # generates the header and body response
     response_headers = [f'HTTP/{http_version} {status_code}', f'Content-Type: {content_type}',
-                        f'Content-Length: {len(content)}', content]
-    return '\r\n'.join(response_headers) + '\r\n\r\n' + content
+                        f'Content-Length: {len(content)}']
+    response_body = ''
+    if len(content) > 0:
+        response_body = '\r\n\r\n' + content
+    return '\r\n'.join(response_headers) + response_body
 
 
 def capture_final_path(path):
