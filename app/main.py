@@ -67,7 +67,7 @@ def process_socket(client_socket, args):
         file_name = get_file_name(client_data)
         file_exists, file_content = check_file(file_name, args.directory)
         if file_exists:
-            http_response = generate_content('1.1', '200 OK', 'application/octet', str(file_content))
+            http_response = generate_content('1.1', '200 OK', 'application/octet-stream', str(file_content))
         else:
             http_response = "HTTP/1.1 404 Not Found\r\n\r\n"
     else:
