@@ -1,6 +1,8 @@
 # Uncomment this to pass the first stage
 import socket
 import re
+from time import sleep
+from threading import Thread
 from urllib.parse import unquote
 
 
@@ -26,14 +28,7 @@ def get_user_agent(client_data):
     match = re.search(pattern, client_data)
     return match.group(1).strip() if match else ''
 
-def main():
-    # You can use print statements as follows for debugging, they'll be visible when running tests.
-    print("Logs from your program will appear here!")
-
-    server_socket = socket.create_server(("localhost", 4221), reuse_port=False)
-
-    server_socket.listen()
-    client_socket, address = server_socket.accept()
+def process_socket(client_socket):
     client_data = client_socket.recv(1024).decode('utf-8')
     first_line = client_data.splitlines()[0]
     path = unquote(first_line.split(" ")[1])
@@ -50,6 +45,16 @@ def main():
     print(http_response)
     client_socket.sendall(http_response.encode())
     client_socket.close()
+
+def main():
+    # You can use print statements as follows for debugging, they'll be visible when running tests.
+    print("Logs from your program will appear here!")
+    server_socket = socket.create_server(("localhost", 4221), reuse_port=False)
+    server_socket.listen()
+    while True:
+        client_socket, address = server_socket.accept()
+        thread = Thread(target=process_socket, args=[client_socket])
+        thread.start()
 
 
 if __name__ == "__main__":
