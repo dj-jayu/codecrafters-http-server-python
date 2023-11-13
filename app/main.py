@@ -8,13 +8,15 @@ from urllib.parse import unquote
 
 
 def generate_content(http_version, status_code, content_type, content):
-    # generates the header and body response
+    # generates the header and body response already encoded in binary
     response_headers = [f'HTTP/{http_version} {status_code}', f'Content-Type: {content_type}',
                         f'Content-Length: {len(content)}']
     response_body = ''
     if len(content) > 0:
         response_body = content
-    return '\r\n'.join(response_headers) + '\r\n\r\n' + response_body
+    if type(response_body) == str:
+        response_body = response_body.encode()
+    return ('\r\n'.join(response_headers) + '\r\n\r\n').encode() + response_body
 
 
 def capture_final_path(path):
@@ -56,7 +58,7 @@ def process_socket(client_socket, args):
     first_line = client_data.splitlines()[0]
     path = unquote(first_line.split(" ")[1])
     if path == '/':
-        http_response = "HTTP/1.1 200 OK\r\n\r\n"
+        http_response = "HTTP/1.1 200 OK\r\n\r\n".encode()
     elif path.startswith('/echo'):
         content = capture_final_path(unquote(path))
         http_response = generate_content('1.1', '200 OK', 'text/plain', content)
@@ -67,13 +69,13 @@ def process_socket(client_socket, args):
         file_name = get_file_name(client_data)
         file_exists, file_content = check_file(file_name, args.directory)
         if file_exists:
-            http_response = generate_content('1.1', '200 OK', 'application/octet-stream', str(file_content))
+            http_response = generate_content('1.1', '200 OK', 'application/octet-stream', file_content)
         else:
-            http_response = "HTTP/1.1 404 Not Found\r\n\r\n"
+            http_response = "HTTP/1.1 404 Not Found\r\n\r\n".encode()
     else:
-        http_response = "HTTP/1.1 404 Not Found\r\n\r\n"
-    print(http_response)
-    client_socket.sendall(http_response.encode())
+        http_response = "HTTP/1.1 404 Not Found\r\n\r\n".encode()
+    print(http_response.decode())
+    client_socket.sendall(http_response)
     client_socket.close()
 
 
