@@ -24,7 +24,7 @@ def get_user_agent(client_data):
     print(client_data)
     pattern = r'User-Agent: (.*)'
     match = re.search(pattern, client_data)
-    return match.group(1) if match else ''
+    return match.group(1).trim() if match else ''
 
 def main():
     # You can use print statements as follows for debugging, they'll be visible when running tests.
