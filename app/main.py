@@ -60,8 +60,8 @@ def get_posted_file_contents(client_data):
 def create_file(file_name, contents, directory):
     full_path = os.path.join(directory, file_name)
     try:
-        with open(full_path, mode='rb') as f:
-            f.write(contents)
+        with open(full_path, mode='wb') as f:
+            f.write(contents.encode())
         return True
     except Exception as e:
         print(f'Error:{e}')
@@ -79,29 +79,31 @@ def process_socket(client_socket, args):
     if method == 'POST':
         if path.startswith('/files'):
             file_name = get_file_name(path)
-            contents = get_posted_file_contents(client_data)
+            _, contents = client_data.split('\r\n\r\n', 1)
+            print(f'{contents=}')
             success = create_file(file_name, contents, args.directory)
             if success:
                 http_response = "HTTP/1.1 201 Created\r\n\r\n".encode()
             else:
                 http_response = "HTTP/1.1 500 Server Error\r\n\r\n".encode()
-    if path == '/':
-        http_response = "HTTP/1.1 200 OK\r\n\r\n".encode()
-    elif path.startswith('/echo'):
-        content = capture_final_path(unquote(path))
-        http_response = generate_content('1.1', '200 OK', 'text/plain', content)
-    elif path == '/user-agent':
-        user_agent = get_user_agent(client_data)
-        http_response = generate_content('1.1', '200 OK', 'text/plain', user_agent)
-    elif path.startswith('/files'):
-        file_name = get_file_name(path)
-        file_exists, file_content = check_file(file_name, args.directory)
-        if file_exists:
-            http_response = generate_content('1.1', '200 OK', 'application/octet-stream', file_content)
+    elif method == 'GET':
+        if path == '/':
+            http_response = "HTTP/1.1 200 OK\r\n\r\n".encode()
+        elif path.startswith('/echo'):
+            content = capture_final_path(unquote(path))
+            http_response = generate_content('1.1', '200 OK', 'text/plain', content)
+        elif path == '/user-agent':
+            user_agent = get_user_agent(client_data)
+            http_response = generate_content('1.1', '200 OK', 'text/plain', user_agent)
+        elif path.startswith('/files'):
+            file_name = get_file_name(path)
+            file_exists, file_content = check_file(file_name, args.directory)
+            if file_exists:
+                http_response = generate_content('1.1', '200 OK', 'application/octet-stream', file_content)
+            else:
+                http_response = "HTTP/1.1 404 Not Found\r\n\r\n".encode()
         else:
             http_response = "HTTP/1.1 404 Not Found\r\n\r\n".encode()
-    else:
-        http_response = "HTTP/1.1 404 Not Found\r\n\r\n".encode()
     print(http_response.decode())
     client_socket.sendall(http_response)
     client_socket.close()
