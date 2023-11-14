@@ -33,10 +33,10 @@ def get_user_agent(client_data):
     return match.group(1).strip() if match else ''
 
 
-def get_file_name(client_data):
-    print(f'{client_data=}')
-    pattern = r'GET /files/([^\s]*)'
-    match = re.search(pattern, client_data)
+def get_file_name(target_path):
+    print(f'{target_path=}')
+    pattern = r'/files/([^\s]*)'
+    match = re.search(pattern, target_path)
     return match.group(1) if match else ''
 
 
@@ -52,11 +52,39 @@ def check_file(file_name, directory):
         return True, file_content
     return False, None
 
+def get_posted_file_contents(client_data):
+    pattern = r'Content-Length:\r\n(.*)'
+    match = re.search(pattern, client_data)
+    return match.group(1)
+
+def create_file(file_name, contents, directory):
+    full_path = os.path.join(directory, file_name)
+    try:
+        with open(full_path, mode='rb') as f:
+            f.write(contents)
+        return True
+    except Exception as e:
+        print(f'Error:{e}')
+        return False
+
+
 
 def process_socket(client_socket, args):
+    http_response = ""
     client_data = client_socket.recv(1024).decode('utf-8')
+    print(f'{client_data=}')
     first_line = client_data.splitlines()[0]
+    method = first_line.split()[0]
     path = unquote(first_line.split(" ")[1])
+    if method == 'POST':
+        if path.startswith('/files'):
+            file_name = get_file_name(path)
+            contents = get_posted_file_contents(client_data)
+            success = create_file(file_name, contents, args.directory)
+            if success:
+                http_response = "HTTP/1.1 201 Created\r\n\r\n".encode()
+            else:
+                http_response = "HTTP/1.1 500 Server Error\r\n\r\n".encode()
     if path == '/':
         http_response = "HTTP/1.1 200 OK\r\n\r\n".encode()
     elif path.startswith('/echo'):
@@ -66,7 +94,7 @@ def process_socket(client_socket, args):
         user_agent = get_user_agent(client_data)
         http_response = generate_content('1.1', '200 OK', 'text/plain', user_agent)
     elif path.startswith('/files'):
-        file_name = get_file_name(client_data)
+        file_name = get_file_name(path)
         file_exists, file_content = check_file(file_name, args.directory)
         if file_exists:
             http_response = generate_content('1.1', '200 OK', 'application/octet-stream', file_content)
